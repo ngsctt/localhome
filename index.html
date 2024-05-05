@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Localhome</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+</head>
+<body>
+  <details id="banner">
+    <summary>Devices</summary>
+    <ul id="devices"></ul>
+    <button id="add-button">Add new</button>
+  </details>
+  <iframe src="" frameborder="0" id="frame" width="100%"></iframe>
+  <dialog id="add-dialog">
+    <form method="dialog" id="add-form">
+      <label>
+        Address:
+        <input type="text" name="address" autocomplete="none">
+      </label>
+      <label>
+        Name:
+        <input type="text" name="device-name" autocomplete="none">
+      </label>
+      <input type="submit" value="Add device">
+    </form>
+  </dialog>
+  <style>
+    :root {
+      height: 100%;
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      height: 100%;
+    }
+
+    #banner {
+      padding: .5rem;
+    }
+
+    #frame {
+      flex-grow: 1;
+    }
+
+    dialog {
+      padding: 0;
+      border: 0;
+      border-radius: .5rem;
+      box-shadow: .25rem .25rem .2rem 0 hsla(0, 0%, 0%, 0.6);
+    }
+
+    #add-form {
+      padding: 1rem;
+      display: grid;
+      grid-template-rows: auto;
+      grid-template-columns: auto 1fr;
+      gap: .5em;
+
+      & label {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: subgrid;
+      }
+
+      & input[type=submit] {
+        grid-column: 1 / -1;
+        justify-self: center;
+      }
+    }
+
+    iframe[src=""] {
+      display: none;
+    }
+  </style>
+  <script>
+    const CACHE_KEY = 'devices';
+    const ADD_BUTTON_ID = 'add-button';
+    const DEVICE_BUTTON_CLASS = 'js-device-button';
+
+    const devices = new Map();
+    const deviceList = document.getElementById('devices');
+    const banner = document.getElementById('banner');
+    const frame = document.getElementById('frame');
+    const form = document.getElementById('add-form');
+    const modal = document.getElementById('add-dialog');
+
+    function initialise () {
+      const cache = localStorage.getItem(CACHE_KEY);
+      const data = JSON.parse(cache);
+      if (data && Array.isArray(data)) for (const {address, name} of data) devices.set(address, name);
+      listDevices();
+    }
+
+    async function addDevice (name, address) {
+      console.log('add', {name, address});
+      // let name = prompt('Device address');
+      // const res = await fetch(address);
+      // const html = res.body;
+      // const parser = new DOMParser().parseFromString;
+      // const document = parser(html);
+      // const name = document.title ?? address;
+      // const address = name.replace(/^(?:(?:http(s?):)?\/\/)?/, 'http$1://');
+      address = address.replace(/^(?:(?:http(s?):)?\/\/)?/, 'http$1://');
+      devices.set(address, name);
+
+      saveDevices();
+      listDevices();
+    }
+
+    function listDevices () {
+      while (deviceList.firstChild) deviceList.lastChild.remove();
+      for (const [address, name] of devices) {
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.classList.add(DEVICE_BUTTON_CLASS);
+        b.textContent = name;
+        b.dataset.address = address;
+        li.append(b);
+        deviceList.append(li);
+      }
+    }
+
+    function saveDevices () {
+      const entries = [...devices.entries()].map(([key, value]) => {return {address: key, name: value}})
+      const string = JSON.stringify(entries);
+      localStorage.setItem(CACHE_KEY, string);
+    }
+
+    function loadDevice (address) {
+      frame.src = address;
+      banner.open = false;
+    }
+
+    window.addEventListener('click', async event => {
+      console.log(event.target);
+      if (event.target.id === ADD_BUTTON_ID) modal.showModal();
+      else if (event.target.classList.contains(DEVICE_BUTTON_CLASS)) loadDevice(event.target.dataset.address);
+      else if (event.target === modal) {
+        form.reset();
+        modal.close();
+      }
+    });
+
+    form.addEventListener('submit', event => {
+      const data = new FormData(form);
+      form.reset();
+      const address = data.get('address');
+      if (!address) return alert('You must provide an address!');
+      const name = data.get('device-name') || address;
+      addDevice(name, address);
+    })
+    initialise();
+  </script>
+</body>
+</html>
