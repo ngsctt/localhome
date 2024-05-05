@@ -1,10 +1,10 @@
 {
   "name": "Localhome",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "icons": [
     {
-      "src": "/apple-touch-icon.png",
+      "src": "apple-touch-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
