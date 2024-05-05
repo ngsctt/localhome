@@ -95,7 +95,7 @@
     function initialise () {
       const cache = localStorage.getItem(CACHE_KEY);
       const data = JSON.parse(cache);
-      if (data && Array.isArray(data)) for (const {address, name} of data) devices.set(address, name);
+      if (data && Array.isArray(data)) for (const {name, address} of data) devices.set(name, address);
       listDevices();
     }
 
@@ -109,7 +109,7 @@
       // const name = document.title ?? address;
       // const address = name.replace(/^(?:(?:http(s?):)?\/\/)?/, 'http$1://');
       address = address.replace(/^(?:(?:http(s?):)?\/\/)?/, 'http$1://');
-      devices.set(address, name);
+      devices.set(name, address);
 
       saveDevices();
       listDevices();
@@ -117,7 +117,7 @@
 
     function listDevices () {
       while (deviceList.firstChild) deviceList.lastChild.remove();
-      for (const [address, name] of devices) {
+      for (const [name, address] of devices) {
         const li = document.createElement('li');
         const b = document.createElement('button');
         b.classList.add(DEVICE_BUTTON_CLASS);
@@ -151,11 +151,11 @@
 
     form.addEventListener('submit', event => {
       const data = new FormData(form);
-      form.reset();
       const address = data.get('address');
       if (!address) return alert('You must provide an address!');
       const name = data.get('device-name') || address;
       addDevice(name, address);
+      form.reset();
     })
     initialise();
   </script>
